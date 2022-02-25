@@ -22,7 +22,7 @@ void computeResidue(const CellField<var>& w, const Grid& g, CellField<var>& res)
       var wr = w[i][j-1];
       // Vector2d f(g.node(i, j), g.node(i+1, j));
       // Vector2d s(f.y, -f.x);
-      Vector2d s = g.facesI(i, j).s;
+      Vector2d s = g.faceI(i, j).s;
 
       var flx = var::flux(wl, wr, s);
 
@@ -39,7 +39,7 @@ void computeResidue(const CellField<var>& w, const Grid& g, CellField<var>& res)
       var wr = w[i][j];
       // Vector2d f(g.node(i, j), g.node(i, j+1));
       // Vector2d s(f.y, -f.x);
-      Vector2d s = g.facesJ(i, j).s;
+      Vector2d s = g.faceJ(i, j).s;
 
       var flx = var::flux(wl, wr, s);
 
