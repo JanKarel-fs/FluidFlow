@@ -33,6 +33,9 @@ public:
   double Pr;
   int stop;
   double CFL;
+  int temporalOrder;
+  int spatialOrder;
+  vector<double> alphaRK;
   map<string, string> usedBC;
 
   Settings() {};

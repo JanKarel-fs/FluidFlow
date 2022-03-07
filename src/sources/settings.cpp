@@ -5,8 +5,8 @@ Settings::Settings(const string& name) {
 
   set<string> sections;
   sections.insert("GRID"); sections.insert("INITIAL_CONDITIONS");
-  sections.insert("BOUNDARY_CONDITIONS");sections.insert("FLUX_SPLITTER");
-  sections.insert("TIME"); sections.insert("PHYSICAL_VALUES");
+  sections.insert("BOUNDARY_CONDITIONS"); sections.insert("ACCURACY");
+  sections.insert("FLUX_SPLITTER"); sections.insert("TIME"); sections.insert("PHYSICAL_VALUES");
   sections.insert("SAVING");
 
   map<string, vector<string> > dataFile;
@@ -62,6 +62,21 @@ Settings::Settings(const string& name) {
   
   findSection(dataFile, "alpha", section, alpha);
   findSection(dataFile, "Ma2is", section, Ma2is);
+
+  section = "ACCURACY";
+  findSection(dataFile, "temporalOrder", section, temporalOrder);
+  findSection(dataFile, "spatialOrder", section, spatialOrder);
+  switch (temporalOrder) {
+  case 1:
+    alphaRK.push_back(1.);
+    break;
+  case 2:
+    alphaRK.push_back(0.5); alphaRK.push_back(0.5); alphaRK.push_back(1.);
+    break;
+  default:
+    cout << "No such temporal order!" << endl;
+    exit(0);
+  }
   
   // Reading information about flux splitter
   section = "FLUX_SPLITTER";

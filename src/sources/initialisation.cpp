@@ -19,6 +19,20 @@ void initialisation(CellField<Compressible>& w, const Grid& g, const Settings& s
     exit(0);
   }
 
+ switch (setting.spatialOrder) {
+ case 1:
+   limiter<Compressible> = zeroLimiter<Compressible>;
+   grad<Compressible> = zeroGrad<Compressible>;
+   break;
+ case 2:
+   limiter<Compressible> = barthJespersen<Compressible>;
+   grad<Compressible> = gradLSM<Compressible>;
+   break;
+ default:
+   cout << "No such spatial order!" << endl;
+   exit(1);
+ }
+
  Compressible::kappa = setting.kappa;
  Compressible::R = setting.R;
  Compressible::Pr = setting.Pr;

@@ -39,7 +39,7 @@ int main() {
     } 
   }
   
-  CellField<Compressible> w(g), res(g);
+  CellField<Compressible> w(g), wStar(g), res(g);
 
   double dt;
   
@@ -50,12 +50,16 @@ int main() {
   for (int i=1; i<=setting.stop; i++) {
     dt = timeStep(w, g, setting);
 
- 
-    setBoundaryConditions(w, g, setting, BC);
+    wStar = w;
+    for (int k=0; k<setting.alphaRK.size(); k++) {
+      setBoundaryConditions(wStar, g, setting, BC);
 
-    computeResidue(w, g, res);
+      computeResidue(wStar, g, res);
       
-    w = w + dt * res;
+      wStar = w + setting.alphaRK[k] * dt * res;
+    }
+
+    w = wStar;
 
     if (i%100 == 0) {
       cout << "iterace: " << i << ", dt = " << dt << endl;
