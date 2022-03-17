@@ -7,10 +7,12 @@
 #include "cellField.hpp"
 #include "../geometry/vector.hpp"
 #include "../geometry/point.hpp"
+#include <omp.h>
 
 template <typename var>
 void gradLSM(const CellField<var>& w, const Grid& g, CellField<Vector2<var> >& gradW) {
 
+#pragma omp parallel for
   for (int i=gradW.Imin(); i<gradW.Imax(); i++) {
     for (int j=gradW.Jmin(); j<gradW.Jmax(); j++) {
       gradW[i][j].x.zero();
@@ -18,6 +20,7 @@ void gradLSM(const CellField<var>& w, const Grid& g, CellField<Vector2<var> >& g
     }
   }
 
+#pragma omp parallel for
   for (int i=0; i<g.Mvol(); i++) {
     for (int j=0; j<g.Nvol(); j++) {
       vector<Point2d> centers;

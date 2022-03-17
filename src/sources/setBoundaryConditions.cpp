@@ -4,6 +4,7 @@ void setBoundaryConditions(CellField<Compressible>& w, const Grid& g, const Sett
 			   const map<string, bCondition>& BC) {
 
   // nastaveni vstupni a vystupni hranice
+#pragma omp parallel for
   for (int j=0; j<w.N(); j++) {
     // vstupni hranice
     const Face& fLeft = g.faceJ(0, j);
@@ -19,6 +20,7 @@ void setBoundaryConditions(CellField<Compressible>& w, const Grid& g, const Sett
   }
 
   // nastveni dolni a horni hranice
+#pragma omp parallel for
   for (int i=-w.gh(); i<w.M()+w.gh(); i++) {
     // dolni hranice
     const Face& fLower = g.faceI(i, 0);

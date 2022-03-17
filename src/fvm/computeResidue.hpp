@@ -6,10 +6,12 @@
 #include "grad.hpp"
 #include "limiter.hpp"
 #include "../geometry/vector.hpp"
+#include <omp.h>
 
 template <typename var>
 void computeResidue(const CellField<var>& w, const Grid& g, CellField<var>& res) {
   // vynulovani residua
+#pragma omp parallel for
   for (int i=0; i<res.M(); i++) {
     for (int j=0; j<res.N(); j++) {
       res[i][j].zero();
@@ -22,6 +24,7 @@ void computeResidue(const CellField<var>& w, const Grid& g, CellField<var>& res)
   limiter<var>(w, gradW, g, psi); 
   
   // vypocet toku stenami ve smeru i
+#pragma omp parallel for
   for (int i=0; i<w.M(); i++) {
     for (int j=0; j<w.N()+1; j++) {
       const Face& f = g.faceI(i, j);
@@ -40,8 +43,9 @@ void computeResidue(const CellField<var>& w, const Grid& g, CellField<var>& res)
   }
 
   // vypocet toku stenami ve smeru j
-  for (int i=0; i<w.M()+1; i++) {
-    for (int j=0; j<w.N(); j++) {
+#pragma omp parallel for
+  for (int j=0; j<w.N(); j++) {
+    for (int i=0; i<w.M()+1; i++) {
       const Face& f = g.faceJ(i, j);
 
       Vector2d rL(g.center(i-1, j), f.center);

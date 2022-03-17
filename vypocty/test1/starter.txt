@@ -28,6 +28,7 @@ Ma2is			0.675			// isoentropic Mach number
 ACCURACY
 temporalOrder		2			//(1) 1st order, (2) 2nd order
 spatialOrder		2			//(1) 1st order, (2) 2nd order
+limiter			1			//(1) Barth-Jespersen, (2) Venkatakrishnan
 //////////////////////////////////////////////////////////////////////////////
 FLUX_SPLITTER
 flux			2			// (1) Upwind, (2) Rusanov

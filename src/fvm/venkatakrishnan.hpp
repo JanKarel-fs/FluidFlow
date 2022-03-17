@@ -1,5 +1,5 @@
-#ifndef BARTHJESPERSEN_HPP
-#define BARTHJESPERSEN_HPP
+#ifndef VENKATAKRISHNAN_HPP
+#define VENKATAKRISHNAN_HPP
 
 #include <vector>
 #include "cellField.hpp"
@@ -10,7 +10,7 @@
 using namespace std;
 
 template <typename var>
-void barthJespersen(const CellField<var>& w, const CellField<Vector2<var> >& gradW,
+void venkatakrishnan(const CellField<var>& w, const CellField<Vector2<var> >& gradW,
 		    const Grid& g, CellField<var>& psi) {
 
 #pragma omp parallel for
@@ -51,6 +51,10 @@ void barthJespersen(const CellField<var>& w, const CellField<Vector2<var> >& gra
 	w_max = var::max(w_max, Neighbours[k]);
 	w_min = var::min(w_min, Neighbours[k]);
       }
+
+      double K = 5.;
+      double dh = sqrt(g.volume(i, j));
+      double eps2 = pow(K * dh, 3);
       
         
       for (int k=0; k<centers.size(); k++) {   
@@ -66,12 +70,18 @@ void barthJespersen(const CellField<var>& w, const CellField<Vector2<var> >& gra
 	  }
 	  else {
 	    if (delta2 > 0.) {
-	      double value = (w_max[m] - w[i][j][m]) / delta2;
-	      psi_k = min(1., value);
+	      double delta1_max = w_max[m] - w[i][j][m]; 
+	      double value = (((pow(delta1_max, 2) + eps2) * delta2
+			       + 2.*pow(delta2, 2)*delta1_max) / (pow(delta1_max, 2)
+			       + 2.*pow(delta2, 2) + delta1_max*delta2 + eps2)) / delta2;
+	      psi_k = value;
 	    }
 	    if (delta2 < 0.) {
-	      double value = (w_min[m] - w[i][j][m]) / delta2;
-	      psi_k = min(1., value);
+	      double delta1_min = w_min[m] - w[i][j][m];
+	      double value = (((pow(delta1_min, 2) + eps2) * delta2
+			       + 2.*pow(delta2, 2)*delta1_min) / (pow(delta1_min, 2)
+			       + 2.*pow(delta2, 2) + delta1_min*delta2 + eps2)) / delta2;
+	      psi_k = value;
 	    }
 	  }
             

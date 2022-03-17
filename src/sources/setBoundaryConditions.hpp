@@ -9,6 +9,7 @@
 #include "../fvm/cellField.hpp"
 #include "../compressible.hpp"
 #include "typedefs.hpp"
+#include <omp.h>
 
 using namespace std;
 

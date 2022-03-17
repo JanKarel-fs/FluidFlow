@@ -25,7 +25,17 @@ void initialisation(CellField<Compressible>& w, const Grid& g, const Settings& s
    grad<Compressible> = zeroGrad<Compressible>;
    break;
  case 2:
-   limiter<Compressible> = barthJespersen<Compressible>;
+   switch (setting.limiter) {
+   case 1:
+     limiter<Compressible> = barthJespersen<Compressible>;
+     break;
+   case 2:
+     limiter<Compressible> = venkatakrishnan<Compressible>;
+     break;
+   default:
+     cout << "No such possibility for limiter" << endl;
+     exit(1);
+   }
    grad<Compressible> = gradLSM<Compressible>;
    break;
  default:

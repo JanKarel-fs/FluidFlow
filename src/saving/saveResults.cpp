@@ -3,6 +3,7 @@
 void saveResults(const CellField<Compressible>& w, const Grid& g) {
   NodeField<Compressible> wnd(g);
 
+#pragma omp parallel for
   for (int i=0; i<wnd.M(); i++) {
     for (int j=0; j<wnd.N(); j++) {
       double volume = g.volume(i, j) + g.volume(i-1, j) + g.volume(i-1, j-1) + g.volume(i, j-1);

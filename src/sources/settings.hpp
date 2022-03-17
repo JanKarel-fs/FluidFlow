@@ -35,6 +35,7 @@ public:
   double CFL;
   int temporalOrder;
   int spatialOrder;
+  int limiter;
   vector<double> alphaRK;
   map<string, string> usedBC;
 

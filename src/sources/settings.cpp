@@ -65,6 +65,7 @@ Settings::Settings(const string& name) {
 
   section = "ACCURACY";
   findSection(dataFile, "temporalOrder", section, temporalOrder);
+  findSection(dataFile, "limiter", section, limiter);
   findSection(dataFile, "spatialOrder", section, spatialOrder);
   switch (temporalOrder) {
   case 1:
