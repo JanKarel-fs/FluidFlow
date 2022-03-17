@@ -1,6 +1,6 @@
 #include "grid_gamm.hpp"
 
-Grid_gamm::Grid_gamm(const int m, const int n, const int gh) {
+Grid_gamm::Grid_gamm(const int m, const int n, const int gh, const string& type) {
   //m, n pocet bunek ve smeru i, j
   Mnodes = m+1;
   Nnodes = n+1;
@@ -66,6 +66,25 @@ Grid_gamm::Grid_gamm(const int m, const int n, const int gh) {
     }
   }
 
+  map<string, coefficients>::iterator it;
+
+  it = mCoefficients.find(type);
+
+  if (it != mCoefficients.end()) {
+    computeCoefficients = it->second;
+  }
+  else {
+    cout << "There is no possibility \"" << type << "\" for evaluating of coefficients in verteces!" << endl;
+    cout<< "Possible choise is: ";
+    for (it=mCoefficients.begin(); it!=mCoefficients.end(); it++) {
+      cout << it->first << ", ";
+    }
+    cout << endl;
+    exit(11);
+  }
+
+  computeCoefficients(*this);
+  
   update_faces();
 
   for (int i=-ghost; i<Mvolumes+ghost; i++) {

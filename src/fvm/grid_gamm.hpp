@@ -10,7 +10,7 @@
 class Grid_gamm : public Grid {
 public:
   Grid_gamm() {};
-  Grid_gamm(const int m, const int n, const int gh);
+  Grid_gamm(const int m, const int n, const int gh, const string& type);
   ~Grid_gamm() {};
 };
 

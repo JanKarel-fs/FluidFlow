@@ -38,6 +38,7 @@ public:
   int limiter;
   vector<double> alphaRK;
   map<string, string> usedBC;
+  string nodeWeightType;
 
   Settings() {};
   Settings(const string& name);
