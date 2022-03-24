@@ -54,7 +54,7 @@ int main() {
     for (int k=0; k<setting.alphaRK.size(); k++) {
       setBoundaryConditions(wStar, g, setting, BC);
 
-      computeResidue(wStar, g, res);
+      computeResidue(wStar, g, res, setting);
       
       wStar = w + setting.alphaRK[k] * dt * res;
     }

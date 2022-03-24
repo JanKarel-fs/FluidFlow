@@ -27,5 +27,5 @@ SET(DIRS fvm geometry saving sources)
 INCLUDE_DIRECTORIES(${DIRS} ${PROJECT_SOURCE_DIR})
 SUBDIRS(${DIRS})
 
-ADD_EXECUTABLE(fluidFlow main.cpp compressible.cpp)
+ADD_EXECUTABLE(fluidFlow main.cpp compressible.cpp primitiveVars.cpp)
 TARGET_LINK_LIBRARIES(fluidFlow Fvm Saving Sources)

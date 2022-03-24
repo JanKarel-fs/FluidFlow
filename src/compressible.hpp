@@ -7,6 +7,10 @@
 #include <algorithm>
 #include "geometry/vector.hpp"
 
+#include "primitiveVars.hpp"
+
+class PrimitiveVars;
+
 class Compressible {
 public:
   double rho;
@@ -20,11 +24,15 @@ public:
   double p() const;
   double a() const;
   double Ma() const;
+  double T() const;
+  double mu() const;
 
   void zero() {rho=0.; rhoU = Vector2d(0., 0.); e=0.;}
   void one() {rho=1.; rhoU = Vector2d(1., 1.); e=1.;}
 
   static Compressible (*flux)(const Compressible& wl, const Compressible& wr, const Vector2d& s);
+  static Compressible fluxDissipative(const Compressible& w, const PrimitiveVars& pVars,
+				      const Vector2<PrimitiveVars>& grad_pVars, const Vector2d& s);
   static Compressible Upwind(const Compressible& wl, const Compressible& wr, const Vector2d& s);
   static Compressible Rusanov(const Compressible& wl, const Compressible& wr, const Vector2d& s);
   static Compressible fabs(const Compressible& w);

@@ -39,6 +39,8 @@ public:
   vector<double> alphaRK;
   map<string, string> usedBC;
   string nodeWeightType;
+  int convection;
+  int diffusion;
 
   Settings() {};
   Settings(const string& name);

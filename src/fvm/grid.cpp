@@ -26,6 +26,10 @@ Point2d Grid::node(const int i, const int j) const {
   return nodes[i][j].vertex;
 }
 
+vector<double> Grid::alpha(const int i, const int j) const {
+  return nodes[i][j].alpha;
+}
+
 Point2d Grid::center(const int i, const int j) const {
   return centers[i][j];
 }

@@ -21,7 +21,42 @@ double Compressible::Ma() const {
   return MachNumber;
 }
 
+double Compressible::T() const {
+  return p() / (rho * R);
+}
+
+double Compressible::mu() const {
+  return 1.45 * pow(T(), 3./2.) / (T() + 110) * 1e-6;
+}
+
 Compressible (*Compressible::flux)(const Compressible& wl, const Compressible& wr, const Vector2d& s);
+
+Compressible Compressible::fluxDissipative(const Compressible& w, const PrimitiveVars& pVars,
+					   const Vector2<PrimitiveVars>& grad_pVars, const Vector2d& s) {
+
+  const double mu = w.mu();
+  const double k = cp * mu / Pr;
+
+  double divU = grad_pVars.x.u.x + grad_pVars.y.u.y; // prvni .x -> derivace podle x, u.x -> x-ova slozka vektoru rychlosti
+
+  double Tau_xx = 2. * mu * (grad_pVars.x.u.x - divU / 3.);
+  double Tau_yy = 2. * mu * (grad_pVars.y.u.y - divU / 3.);
+  double Tau_xy = mu * (grad_pVars.y.u.x + grad_pVars.x.u.y);
+
+  Vector2d firstRow(Tau_xx, Tau_xy);
+  Vector2d secondRow(Tau_xy, Tau_yy);
+
+  double Psi_x = dot(firstRow, pVars.u) + k * grad_pVars.x.T;
+  double Psi_y = dot(secondRow, pVars.u) + k * grad_pVars.y.T;
+
+  Vector2d thirdRow(Psi_x, Psi_y);
+
+  double x = dot(firstRow, s);
+  double y = dot(secondRow, s);
+  double last = dot(thirdRow, s);
+
+  return Compressible(0., Vector2d(x, y), last);
+}
 
 
 Compressible Compressible::Upwind(const Compressible& wl, const Compressible& wr, const Vector2d& s) {
