@@ -20,6 +20,8 @@ public:
   int mCells;
   int nCells;
   int ghostCells;
+  string name1;
+  string name2;
   double pInit;
   double rhoInit;
   Vector2d uInit;

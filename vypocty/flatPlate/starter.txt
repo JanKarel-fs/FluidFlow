@@ -1,17 +1,17 @@
 GRID
-grid_type		1			// (1) gamm
-mCells			150
-nCells			50
+grid_type		2			// (1) gamm, (2) X,Y files
+name1			X
+name2			Y
 ghostCells		1
 //////////////////////////////////////////////////////////////////////////////
 INITIAL_CONDITIONS
-rhoInit			1			// initial density
-uInit			0.5			// initial x velocity component
+rhoInit			1.0201201598403826	// initial density
+uInit			0			// initial x velocity component
 vInit			0			// initial y velocity component
-pInit			1			// initial pressure
+pInit			18			// initial pressure
 //////////////////////////////////////////////////////////////////////////////
 BOUNDARY_CONDITIONS
-numOfBoundaries		3			// pocet typu hranic
+numOfBoundaries		5			// pocet typu hranic
 
 boundary1		inlet			// jmeno hranice v souboru se siti
 bcType1			inlet			// pozadovana okrajova podminka
@@ -20,10 +20,16 @@ boundary2		outlet
 bcType2			outlet
 
 boundary3		wall
-bcType3			slipWall
+bcType3			noSlipWall
+
+boundary4		lower
+bcType4			symmetry
+
+boundary5		upper
+bcType5			homogeneousNeumann
 
 alpha			0			// inlet flow angel
-Ma2is			0.675			// isoentropic Mach number
+Ma2is			0.2			// isoentropic Mach number
 //////////////////////////////////////////////////////////////////////////////
 ACCURACY
 temporalOrder		2			//(1) 1st order, (2) 2nd order
@@ -33,20 +39,20 @@ limiter			1			//(1) Barth-Jespersen, (2) Venkatakrishnan
 FLUX_SPLITTER
 flux			2			// (1) Upwind, (2) Rusanov
 //////////////////////////////////////////////////////////////////////////////
-TIME
-CFL			0.8
-//////////////////////////////////////////////////////////////////////////////
 SYSTEM
 convection		1			// (0) off, (1) on
-diffusion		0			// (0) off, (1) on
+diffusion		1			// (0) off, (1) on
 nodeWeightType		LSM			// LSM, Weight
+//////////////////////////////////////////////////////////////////////////////
+TIME
+CFL			0.5
 //////////////////////////////////////////////////////////////////////////////
 PHYSICAL_VALUES
 kappa			1.4
-rho0			1
-p0			1
-R			287.1
+rho0			1.0201201598403826
+p0			18.362162877126892
+R			0.06196954073134
 Pr			0.72
 //////////////////////////////////////////////////////////////////////////////
 SAVING
-stop			10000			// total number of interations
+stop			100000			// total number of interations

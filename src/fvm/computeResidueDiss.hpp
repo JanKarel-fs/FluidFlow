@@ -15,8 +15,8 @@
 template <typename var>
 void computeResidueDiss(const CellField<var>& w, const Grid& g, CellField<var>& res) {
 
-  CellField<PrimitiveVars> pVars;
-  NodeField<PrimitiveVars> pVarsNode;
+  CellField<PrimitiveVars> pVars(g);
+  NodeField<PrimitiveVars> pVarsNode(g);
 
 #pragma omp parallel for
   for (int i=w.Imin(); i<w.Imax(); i++) {

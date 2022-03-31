@@ -4,6 +4,8 @@
 #include <limits>
 #include <cmath>
 #include <vector>
+#include <iostream>
+#include <cstdlib>
 #include "../fvm/grid.hpp"
 #include "../fvm/cellField.hpp"
 #include "../geometry/vector.hpp"

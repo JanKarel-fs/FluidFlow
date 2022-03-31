@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include "../fvm/grid.hpp"
 #include "../fvm/grid_gamm.hpp"
+#include "../fvm/grid_xy.hpp"
 #include "settings.hpp"
 
 using namespace std;

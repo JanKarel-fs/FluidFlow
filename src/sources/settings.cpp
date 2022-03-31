@@ -5,7 +5,7 @@ Settings::Settings(const string& name) {
 
   set<string> sections;
   sections.insert("GRID"); sections.insert("INITIAL_CONDITIONS");
-  sections.insert("BOUNDARY_CONDITIONS"); sections.insert("ACCURACY");
+  sections.insert("BOUNDARY_CONDITIONS"); sections.insert("ACCURACY"); sections.insert("SYSTEM");
   sections.insert("FLUX_SPLITTER"); sections.insert("TIME"); sections.insert("PHYSICAL_VALUES");
   sections.insert("SAVING");
 
@@ -21,6 +21,10 @@ Settings::Settings(const string& name) {
   case 1:
     findSection(dataFile, "mCells", section, mCells);
     findSection(dataFile, "nCells", section, nCells);
+    break;
+  case 2:
+    findSection(dataFile, "name1", section, name1);
+    findSection(dataFile, "name2", section, name2);
     break;
   default:
     cout << "Loading starter.txt: no a such grid type!" << endl;
@@ -86,6 +90,12 @@ Settings::Settings(const string& name) {
   // Reading information about time
   section = "TIME";
   findSection(dataFile, "CFL", section, CFL);
+
+  // Reading information about system
+  section = "SYSTEM";
+  findSection(dataFile, "convection", section, convection);
+  findSection(dataFile, "diffusion", section, diffusion);
+  findSection(dataFile, "nodeWeightType", section, nodeWeightType);
 
   // Reading information about physical values
   section = "PHYSICAL_VALUES";
