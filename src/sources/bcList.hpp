@@ -10,14 +10,22 @@
 #include "noSlipWall.hpp"
 #include "symmetry.hpp"
 #include "homogeneousNeumann.hpp"
+#include "inletJacobian.hpp"
+#include "outletJacobian.hpp"
+#include "slipWallJacobian.hpp"
+#include "noSlipWallJacobian.hpp"
+#include "symmetryJacobian.hpp"
+#include "homogeneousNeumannJacobian.hpp"
 
 using namespace std;
 
-map<string, bCondition> bcList = {condition("inlet", inlet),
-				  condition("outlet", outlet),
-				  condition("slipWall", slipWall),
-				  condition("noSlipWall", noSlipWall),
-				  condition("symmetry", symmetry),
-				  condition("homogeneousNeumann", homogeneousNeumann)};
+map<string, bcWithJacobian> bcList =
+    {condition("inlet", bcWithJacobian(inlet, inletJacobian)),
+     condition("outlet", bcWithJacobian(outlet, outletJacobian)),
+     condition("slipWall", bcWithJacobian(slipWall, slipWallJacobian)),
+     condition("noSlipWall", bcWithJacobian(noSlipWall, noSlipWallJacobian)),
+     condition("symmetry", bcWithJacobian(symmetry, symmetryJacobian)),
+     condition("homogeneousNeumann", bcWithJacobian(homogeneousNeumann,
+						    homogeneousNeumannJacobian))};
 
 #endif

@@ -169,15 +169,15 @@ template <typename T>
 void Matrix<T>::zero() {
   int size = M * N;
   
-  for (size_t i=0; i<size; i++) {
+  for (int i=0; i<size; i++) {
     field[i] = 0;
   }
 }
 
 template <typename T>
 void Matrix<T>::ones() {
-  for (size_t i=0; i<M; i++) {
-    for (size_t j=0; j<N; j++) {
+  for (int i=0; i<M; i++) {
+    for (int j=0; j<N; j++) {
       if (i == j) {
 	field[i*N + j] = 1;
       }

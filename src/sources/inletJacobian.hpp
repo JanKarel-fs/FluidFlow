@@ -9,6 +9,6 @@
 
 using namespace std;
 
-Matrixd inlet(const Compressible& wInside, const Vector2d& s, const Settings& setting);
+Matrixd inletJacobian(const Compressible& wInside, const Vector2d& s, const Settings& setting);
 
 #endif

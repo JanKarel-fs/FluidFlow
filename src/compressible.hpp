@@ -5,9 +5,13 @@
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
+#include <utility>
 #include "geometry/vector.hpp"
+#include "geometry/matrix.hpp"
 
 #include "primitiveVars.hpp"
+
+using namespace std;
 
 class PrimitiveVars;
 
@@ -35,6 +39,12 @@ public:
 				      const Vector2<PrimitiveVars>& grad_pVars, const Vector2d& s);
   static Compressible Upwind(const Compressible& wl, const Compressible& wr, const Vector2d& s);
   static Compressible Rusanov(const Compressible& wl, const Compressible& wr, const Vector2d& s);
+  static pair<pair<Matrixd, Matrixd>, Compressible> (*fluxImplicit)(const Compressible& wl,
+						      const Compressible& wr, const Vector2d& s);
+  static pair<pair<Matrixd, Matrixd>, Compressible> UpwindImplicit(const Compressible& wl,
+						      const Compressible& wr, const Vector2d& s);
+  static pair<pair<Matrixd, Matrixd>, Compressible> RusanovImplicit(const Compressible& wl,
+						      const Compressible& wr, const Vector2d& s);
   static Compressible fabs(const Compressible& w);
   static Compressible sqrt(const Compressible& w);
   static Compressible max(const Compressible& a, const Compressible& b);

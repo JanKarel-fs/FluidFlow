@@ -11,17 +11,28 @@
 #include "sources/typedefs.hpp"
 #include "saving/storeNormResidue.hpp"
 #include "saving/saveResults.hpp"
+#include "sources/step.hpp"
+#include "sources/stepExplicit.hpp"
+#include "sources/stepImplicit.hpp"
+#include "sources/linearSolver.hpp"
 #include "compressible.hpp"
 
 using namespace std;
 
-int main() {
+int main(int argc,char **args) {
+
+  PetscInitialize( &argc , &args , (char *)0 , 0 );
+  
   Settings setting("starter.txt");
+
+  step<Compressible> = stepExplicit<Compressible>;
   
   Grid g;
   setGrid(g, setting);
 
-  map<string, bCondition> BC;
+  LinearSolver<Compressible> linSolver;
+
+  map<string, bcWithJacobian> BC;
 
   for (auto it = setting.usedBC.begin(); it != setting.usedBC.end(); it++) {
     auto itbcL = bcList.find(it->second);
@@ -39,7 +50,7 @@ int main() {
     } 
   }
   
-  CellField<Compressible> w(g), wStar(g), res(g);
+  CellField<Compressible> w(g), res(g);
 
   double dt;
   
@@ -50,16 +61,7 @@ int main() {
   for (int i=1; i<=setting.stop; i++) {
     dt = timeStep(w, g, setting);
 
-    wStar = w;
-    for (int k=0; k<setting.alphaRK.size(); k++) {
-      setBoundaryConditions(wStar, g, setting, BC);
-
-      computeResidue(wStar, g, res, setting);
-      
-      wStar = w + setting.alphaRK[k] * dt * res;
-    }
-
-    w = wStar;
+    step<Compressible>(w, res, g, dt, BC, linSolver, setting);
 
     if (i%100 == 0) {
       cout << "iterace: " << i << ", dt = " << dt << endl;
@@ -72,6 +74,8 @@ int main() {
   saveResults(w, g);
 
   cout << "Good bye!" << endl;
+
+  PetscFinalize();
 
   return 0;
 }

@@ -31,6 +31,9 @@ double Compressible::mu() const {
 
 Compressible (*Compressible::flux)(const Compressible& wl, const Compressible& wr, const Vector2d& s);
 
+pair<pair<Matrixd, Matrixd>, Compressible> (*Compressible::fluxImplicit)(const Compressible& wl,
+						      const Compressible& wr, const Vector2d& s);
+
 Compressible Compressible::fluxDissipative(const Compressible& w, const PrimitiveVars& pVars,
 					   const Vector2<PrimitiveVars>& grad_pVars, const Vector2d& s) {
 
@@ -134,6 +137,23 @@ Compressible Compressible::Rusanov(const Compressible& wl, const Compressible& w
 
   return flx * s.length();
   
+}
+
+
+pair<pair<Matrixd, Matrixd>, Compressible> Compressible::UpwindImplicit(const Compressible& wl,
+   						         const Compressible& wr, const Vector2d& s) {
+
+  cout << "An implicit version of an Upwind scheme is not implemented yet!" << endl;
+  exit(21);
+}
+
+
+
+pair<pair<Matrixd, Matrixd>, Compressible> Compressible::RusanovImplicit(const Compressible& wl,
+							 const Compressible& wr, const Vector2d& s) {
+
+  cout << "An implicit version of a Rusanov scheme is not implemented yet!" << endl;
+  exit(22);
 }
 
 
