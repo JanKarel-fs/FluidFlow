@@ -7,6 +7,7 @@
 #include "cellField.hpp"
 #include "grad.hpp"
 #include "limiter.hpp"
+#include "timeIncrement.hpp"
 #include "computeResidueConvImplicit.hpp"
 #include "computeResidueDissImplicit.hpp"
 #include "../geometry/vector.hpp"
@@ -19,8 +20,9 @@ using namespace std;
 
 template <typename var>
 void computeResidueImplicit(const CellField<var>& w, const Grid& g,
-			    const map<string, bcWithJaconian>& BC, const double& dt,
+			    const map<string, bcWithJacobian>& BC, const double& dt,
 			    LinearSolver<var>& linSolver, const Settings& setting) {
+  
   timeIncrement<var>(linSolver, dt);
 
   switch (setting.convection) {

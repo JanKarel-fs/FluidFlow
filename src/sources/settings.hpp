@@ -35,6 +35,7 @@ public:
   double Pr;
   int stop;
   double CFL;
+  int solver;
   int temporalOrder;
   int spatialOrder;
   int limiter;

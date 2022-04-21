@@ -143,8 +143,129 @@ Compressible Compressible::Rusanov(const Compressible& wl, const Compressible& w
 pair<pair<Matrixd, Matrixd>, Compressible> Compressible::UpwindImplicit(const Compressible& wl,
    						         const Compressible& wr, const Vector2d& s) {
 
-  cout << "An implicit version of an Upwind scheme is not implemented yet!" << endl;
-  exit(21);
+  Compressible flx = Upwind(wl, wr, s);
+
+  Matrixd JL(nVars), JR(nVars);
+  JL.zero();  JR.zero();
+
+  double ds = s.length();
+  Vector2d n = s / ds;
+
+  double p = (wl.p() + wr.p()) / 2.;
+
+  double uL = wl.rhoU.x / wl.rho;
+  double vL = wl.rhoU.y / wl.rho;
+  double uLn = uL*n.x + vL*n.y;
+
+  double uR = wr.rhoU.x / wr.rho;
+  double vR = wr.rhoU.y / wr.rho;
+  double uRn = uR*n.x + vR*n.y;
+
+  double un = 0.5 * (uLn + uRn);
+
+  if (un >= 0.) {
+    // LEFT JACOBIAN
+    // 1st row of the left Jacobian
+    JL[0][0] = un - uLn/2.;  JL[0][1] = n.x/2.;  JL[0][2] = n.y/2.;
+
+    // 2nd row of the left Jacobian
+    JL[1][0] = -uL*uLn/2. + (kappa-1.)/4. * (uL*uL + vL*vL)*n.x;
+    JL[1][1] = un + uL*n.x/2. - (kappa-1.)/2. * uL*n.x;
+    JL[1][2] = uL*n.y/2. - (kappa-1.)/2. * vL*n.x;
+    JL[1][3] = (kappa-1.)*n.x/2.;
+
+    // 3rd row of the left Jacobian
+    JL[2][0] = -vL*uLn/2. + (kappa-1.)/4. * (uL*uL + vL*vL)*n.y;
+    JL[2][1] = vL*n.x/2. - (kappa-1.)/2. * uL*n.y;
+    JL[2][2] = un + vL*n.y/2. - (kappa-1.)/2. * vL*n.y;
+    JL[2][3] = (kappa-1.)*n.y/2.;
+
+    // 4ht row of the left Jacobian
+    JL[3][0] = (kappa-1.)/4. * (uL*uL + vL*vL)*un - (wl.e + p)/(2.*wl.rho) * uLn;
+    JL[3][1] = -(kappa-1.)/2. * uL*un + (wl.e + p)/(2.*wl.rho) * n.x;
+    JL[3][2] = -(kappa-1.)/2. * vL*un + (wl.e + p)/(2.*wl.rho) * n.y;
+    JL[3][3] = (1. + (kappa-1.)/2.) * un;
+
+    // RIGHT JACOBIAN
+    // 1st row of the right Jacobian
+    JR[0][0] = -0.5 * wl.rho/wr.rho * uRn;
+    JR[0][1] = 0.5 * wl.rho/wr.rho * n.x;
+    JR[0][2] = 0.5 * wl.rho/wr.rho * n.y;
+
+    // 2nd row of the right Jacobian
+    JR[1][0] = -wl.rhoU.x/wr.rho * uRn/2. + (kappa-1.)/4. * (uR*uR + vR*vR)*n.x;
+    JR[1][1] = wl.rhoU.x/wr.rho * n.x/2. - (kappa-1.)/2. * uR*n.x;
+    JR[1][2] = wl.rhoU.x/wr.rho * n.y/2. - (kappa-1.)/2. * vR*n.x;
+    JR[1][3] = (kappa-1.)*n.x/2.;
+
+    // 3rd row of the right Jacobian
+    JR[2][0] = -wl.rhoU.y/wr.rho * uRn/2. + (kappa-1.)/4. * (uR*uR + vR*vR)*n.y;
+    JR[2][1] = wl.rhoU.y/wr.rho * n.x/2. - (kappa-1.)/2. * uR*n.y;
+    JR[2][2] = wl.rhoU.y/wr.rho * n.y/2. - (kappa-1.)/2. * vR*n.y;
+    JR[2][3] = (kappa-1.)*n.y/2.;
+
+    // 4th row of the right Jacobian
+    JR[3][0] = (kappa-1.)/4. * (uR*uR + vR*vR)*un - (wl.e + p)/(2.*wr.rho) * uRn;
+    JR[3][1] = -(kappa-1.)/2. * uR*un + (wl.e + p)/(2.*wr.rho) * n.x;
+    JR[3][2] = -(kappa-1.)/2. * vR*un + (wl.e + p)/(2.*wr.rho) * n.y;
+    JR[3][3] = (kappa-1.)*un/2.;
+  }
+
+  else {
+    // LEFT JACOBIAN
+    // 1st row of the left Jacobian
+    JL[0][0] = -0.5 * wr.rho/wl.rho * uLn;
+    JL[0][1] = 0.5 * wr.rho/wl.rho * n.x;
+    JL[0][2] = 0.5 * wr.rho/wl.rho * n.y;
+
+    // 2nd row of the left Jacobian
+    JL[1][0] = -wr.rhoU.x/wl.rho * uLn/2. + (kappa-1.)/4. * (uL*uL + vL*vL)*n.x;
+    JL[1][1] = wr.rhoU.x/wl.rho * n.x/2. - (kappa-1.)/2. * uL*n.x;
+    JL[1][2] = wr.rhoU.x/wl.rho * n.y/2. - (kappa-1.)/2. * vL*n.x;
+    JL[1][3] = (kappa-1.)*n.x/2.;
+
+    // 3rd row of the left Jacobian
+    JL[2][0] = -wr.rhoU.y/wl.rho * uLn/2. + (kappa-1.)/4. * (uL*uL + vL*vL)*n.y;
+    JL[2][1] = wr.rhoU.y/wl.rho * n.x/2. - (kappa-1.)/2. * uL*n.y;
+    JL[2][2] = wr.rhoU.y/wl.rho * n.y/2. - (kappa-1.)/2. * vL*n.y;
+    JL[2][3] = (kappa-1.)*n.y/2.;
+
+    // 4th row of the left Jacobian
+    JL[3][0] = (kappa-1.)/4. * (uL*uL + vL*vL)*un - (wr.e + p)/(2.*wl.rho) * uLn;
+    JL[3][1] = -(kappa-1.)/2. * uL*un + (wr.e + p)/(2.*wl.rho) * n.x;
+    JL[3][2] = -(kappa-1.)/2. * vL*un + (wr.e + p)/(2.*wl.rho) * n.y;
+    JL[3][3] = (kappa-1.)*un/2.;
+
+    // RIGHT JACOBIAN
+    // 1st row of the right Jacobian
+    JR[0][0] = un - uRn/2.;  JR[0][1] = n.x/2.;  JR[0][2] = n.y/2.;
+
+    // 2nd row of the right Jacobian
+    JR[1][0] = -uR*uRn/2. + (kappa-1.)/4. * (uR*uR + vR*vR)*n.x;
+    JR[1][1] = un + uR*n.x/2. - (kappa-1.)/2. * uR*n.x;
+    JR[1][2] = uR*n.y/2. - (kappa-1.)/2. * vR*n.x;
+    JR[1][3] = (kappa-1.)*n.x/2.;
+
+    // 3rd row of the right Jacobian
+    JR[2][0] = -vR*uRn/2. + (kappa-1.)/4. * (uR*uR + vR*vR)*n.y;
+    JR[2][1] = vR*n.x/2. - (kappa-1.)/2. * uR*n.y;
+    JR[2][2] = un + vR*n.y/2. - (kappa-1.)/2. * vR*n.y;
+    JR[2][3] = (kappa-1.)*n.y/2.;
+
+    // 4ht row of the right Jacobian
+    JR[3][0] = (kappa-1.)/4. * (uR*uR + vR*vR)*un - (wr.e + p)/(2.*wr.rho) * uRn;
+    JR[3][1] = -(kappa-1.)/2. * uR*un + (wr.e + p)/(2.*wr.rho) * n.x;
+    JR[3][2] = -(kappa-1.)/2. * vR*un + (wr.e + p)/(2.*wr.rho) * n.y;
+    JR[3][3] = (1. + (kappa-1.)/2.) * un;
+  }
+
+  pair<pair<Matrixd, Matrixd>, Compressible> JacobiansAndRHS;
+
+  JacobiansAndRHS.first.first = JL * ds;
+  JacobiansAndRHS.first.second = JR * ds;
+  JacobiansAndRHS.second = flx;
+
+  return JacobiansAndRHS;
 }
 
 

@@ -93,6 +93,7 @@ Settings::Settings(const string& name) {
 
   // Reading information about system
   section = "SYSTEM";
+  findSection(dataFile, "solver", section, solver);
   findSection(dataFile, "convection", section, convection);
   findSection(dataFile, "diffusion", section, diffusion);
   findSection(dataFile, "nodeWeightType", section, nodeWeightType);

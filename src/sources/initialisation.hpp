@@ -12,6 +12,11 @@
 #include "../fvm/grad.hpp"
 #include "../fvm/gradLSM.hpp"
 #include "../fvm/zeroGrad.hpp"
+#include "step.hpp"
+#include "stepExplicit.hpp"
+#include "stepImplicit.hpp"
+#include "fvm/timeIncrement.hpp"
+#include "fvm/timeIncrementFirstOrder.hpp"
 
 void initialisation(CellField<Compressible>& w, const Grid& g, const Settings& setting);
 

@@ -40,6 +40,7 @@ FLUX_SPLITTER
 flux			2			// (1) Upwind, (2) Rusanov
 //////////////////////////////////////////////////////////////////////////////
 SYSTEM
+solver			1			// (1) explicit, (2) implicit
 convection		1			// (0) off, (1) on
 diffusion		1			// (0) off, (1) on
 nodeWeightType		LSM			// LSM, Weight

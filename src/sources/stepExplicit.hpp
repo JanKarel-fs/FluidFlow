@@ -3,6 +3,7 @@
 
 #include "fvm/grid.hpp"
 #include "fvm/cellField.hpp"
+#include "fvm/computeResidue.hpp"
 #include "sources/typedefs.hpp"
 #include "sources/settings.hpp"
 #include "sources/setBoundaryConditions.hpp"
@@ -13,7 +14,7 @@ void stepExplicit(CellField<var>& w, CellField<var>& res, const Grid& g, const d
 		  const map<string, bcWithJacobian>& BC, LinearSolver<var>& linSolver,
 		  const Settings& setting) {
 
-  CellField<Compressible> wStar(g);
+  CellField<var> wStar(g);
 
   wStar = w;
   for (int k=0; k<setting.alphaRK.size(); k++) {

@@ -12,8 +12,6 @@
 #include "saving/storeNormResidue.hpp"
 #include "saving/saveResults.hpp"
 #include "sources/step.hpp"
-#include "sources/stepExplicit.hpp"
-#include "sources/stepImplicit.hpp"
 #include "sources/linearSolver.hpp"
 #include "compressible.hpp"
 
@@ -24,13 +22,11 @@ int main(int argc,char **args) {
   PetscInitialize( &argc , &args , (char *)0 , 0 );
   
   Settings setting("starter.txt");
-
-  step<Compressible> = stepExplicit<Compressible>;
   
   Grid g;
   setGrid(g, setting);
 
-  LinearSolver<Compressible> linSolver;
+  LinearSolver<Compressible> linSolver(setting.solver, g);
 
   map<string, bcWithJacobian> BC;
 
@@ -63,7 +59,7 @@ int main(int argc,char **args) {
 
     step<Compressible>(w, res, g, dt, BC, linSolver, setting);
 
-    if (i%100 == 0) {
+    if (i%5 == 0) {
       cout << "iterace: " << i << ", dt = " << dt << endl;
       storeNormResidue(res, g, i);
     }
@@ -74,6 +70,8 @@ int main(int argc,char **args) {
   saveResults(w, g);
 
   cout << "Good bye!" << endl;
+
+  linSolver.free();
 
   PetscFinalize();
 

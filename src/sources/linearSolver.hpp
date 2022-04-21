@@ -32,19 +32,26 @@ public:
       VecSet(b, 0.);
 
       VecDuplicate(b, &x);
-      VecSet(x, 0.);
+      VecSet(x, 1.);
 
       MatCreate(PETSC_COMM_WORLD, &A);
       MatSetSizes(A, PETSC_DECIDE, PETSC_DECIDE, nmb, nmb);
+      MatSetType(A, MATAIJ);
+      MatSeqAIJSetPreallocation(A, 20, NULL);
+      MatMPIAIJSetPreallocation(A, 20, NULL, 20, NULL);
       MatSetFromOptions(A);
       MatSetUp(A);
-      MatZeroEntries(A);
 
       KSPCreate(PETSC_COMM_WORLD, &solver);
-      KSPSetOperators(solver, A, A);
+      //KSPSetType(solver, KSPMINRES);
 
-      KSPSetFromOptions(solver);
-      KSPSetUp(solver);
+      // PC prec;
+      // KSPGetPC(solver,&prec);
+      // PCSetType(prec,PCJACOBI);
+      // //KSPSetOperators(solver, A, A);
+
+      // KSPSetFromOptions(solver);
+      // KSPSetUp(solver);
     }
       break;
     default:
@@ -67,21 +74,46 @@ public:
   Vec x, b;
   Mat A;
   KSP solver;
-
+  KSPConvergedReason reason;
+  PetscInt  its;
+  PetscReal rnorm;
+  
   void solve() {
     VecAssemblyBegin(b);
     VecAssemblyEnd(b);
 
     MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);
+
+    //MatView(A, PETSC_VIEWER_STDOUT_WORLD);
     
     KSPSetOperators(solver, A, A);
     KSPSolve(solver, b, x);
+      
+    PetscInt  restart, maxits;
+    PetscReal rtol, abstol;
+    KSPGetTolerances(solver, &rtol, &abstol, NULL, &maxits);
+    KSPGMRESGetRestart(solver, &restart);
+      
+    cout<<"Initial settings "<<endl;
+    cout<<"Relative tolerance : "<<rtol<<endl;
+    cout<<"Absolute tolerance : "<<abstol<<endl;
+    cout<<"Maximal number of iterations : "<<maxits<<endl;
+    cout<<"Number of Krylov vectors before restarting : "<<restart<<endl<<endl;
+      
+    cout<<"Convergence reason     KSP iterations      Residual norm    "<<endl;
+
+    KSPGetConvergedReason(solver, &reason);
+    KSPGetIterationNumber(solver, &its);
+    KSPGetResidualNorm(solver, &rnorm);
+    
+        
+    cout << reason << " " << its << " " << rnorm << " " << endl;
   };
 
   void getResults(CellField<var>& res) {
     const PetscScalar *px;
-
+ 
     VecGetArrayRead(x, &px);
 
     for (int i=0; i<res.M(); i++) {
@@ -98,6 +130,16 @@ public:
   void reset() {
     MatZeroEntries(A);
     VecSet(b, 0.);
+  };
+
+  void free() {
+    if (activated) {
+      KSPDestroy(&solver);
+      MatDestroy(&A);
+      VecDestroy(&x);
+      VecDestroy(&b);
+    }
+    activated = false;
   };
 };
 

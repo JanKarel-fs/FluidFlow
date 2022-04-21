@@ -3,6 +3,7 @@
 
 #include "fvm/grid.hpp"
 #include "fvm/cellField.hpp"
+#include "fvm/computeResidueImplicit.hpp"
 #include "sources/typedefs.hpp"
 #include "sources/settings.hpp"
 #include "sources/setBoundaryConditions.hpp"
