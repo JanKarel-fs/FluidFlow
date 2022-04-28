@@ -19,10 +19,10 @@ void computeResidueConvImplicit(const CellField<var>& w, const Grid& g,
   CellField<Vector2<var> > gradW(g);
   CellField<var> psi(g);
   grad<var>(w, g, gradW);
-  limiter<var>(w, gradW, g, psi); 
+  limiter<var>(w, gradW, g, psi);
   
   // vypocet toku stenami ve smeru i
-  //#pragma omp parallel for
+#pragma omp parallel for
   for (int i=0; i<w.M(); i++) {
     for (int j=0; j<w.N()+1; j++) {
       const Face& f = g.faceI(i, j);
@@ -47,50 +47,68 @@ void computeResidueConvImplicit(const CellField<var>& w, const Grid& g,
       if (j==0 || j==w.N()) {
 	var wb;
 	int offset;
+	double coeff, volume;
 	if (j==0) {
 	  wb = wl;
 	  offset = leftOffset;
+	  coeff = -1.;
+	  volume = leftVolume;
 	}
 	else {
 	  wb = wr;
 	  offset = rightOffset;
+	  coeff = 1.;
+	  volume = rightVolume;
 	}
 	auto it = BC.find(f.name);
 	Matrixd BJacobian = it->second.second(wb, f.s, setting);
 	Jacobians.second = Jacobians.second * BJacobian;
+
+	int row[var::nVars], col[var::nVars];
+	double values[var::nVars*var::nVars];
 	
 	for (int k=0; k<var::nVars; k++) {
-	  VecSetValue(linSolver.b, offset + k, -1.*flx[k] / leftVolume, ADD_VALUES);
+	  linSolver.rhs[ offset + k] += coeff*flx[k] / volume;
+	  row[k] = offset + k;
+	  col[k] = offset + k;
 	  for (int m=0; m<var::nVars; m++) {
-	    MatSetValue(linSolver.A, offset + k, offset + m,
-			Jacobians.first[k][m] / leftVolume, ADD_VALUES);
-	    MatSetValue(linSolver.A, offset + k, offset + m,
-			Jacobians.second[k][m] / leftVolume, ADD_VALUES);
+	    values[k*var::nVars + m] = -coeff*Jacobians.first[k][m] / volume;
+	    values[k*var::nVars + m] += -coeff*Jacobians.second[k][m] / volume;
 	  }
 	}
+	MatSetValues(linSolver.A, var::nVars, row, var::nVars, col, values, ADD_VALUES);
       }
       else {
-	for (int k=0; k<var::nVars; k++) {
-	  VecSetValue(linSolver.b, leftOffset + k, -1.*flx[k] / leftVolume, ADD_VALUES);
-	  VecSetValue(linSolver.b, rightOffset + k, flx[k] / rightVolume, ADD_VALUES);
-	  for (int m=0; m<var::nVars; m++) {
-	    MatSetValue(linSolver.A, leftOffset + k, leftOffset + m,
-			Jacobians.first[k][m] / leftVolume, ADD_VALUES);
-	    MatSetValue(linSolver.A,leftOffset + k, rightOffset + m,
-			Jacobians.second[k][m] / leftVolume, ADD_VALUES);
+	int rowL[var::nVars], colL[var::nVars], rowR[var::nVars], colR[var::nVars];
+	double valuesLL[var::nVars*var::nVars], valuesLR[var::nVars*var::nVars];
+	double valuesRL[var::nVars*var::nVars], valuesRR[var::nVars*var::nVars];
 	
-	    MatSetValue(linSolver.A, rightOffset + k, leftOffset + m,
-			-1.*Jacobians.first[k][m] / rightVolume, ADD_VALUES);
-	    MatSetValue(linSolver.A, rightOffset + k, rightOffset + m,
-			-1.*Jacobians.second[k][m] / rightVolume, ADD_VALUES);
+	for (int k=0; k<var::nVars; k++) {
+	  linSolver.rhs[leftOffset + k] += -1.*flx[k] / leftVolume;
+	  linSolver.rhs[rightOffset + k] += flx[k] / rightVolume;
+	  rowL[k] = leftOffset + k;
+	  colL[k] = leftOffset + k;
+	  rowR[k] = rightOffset + k;
+	  colR[k] = rightOffset + k;
+	  for (int m=0; m<var::nVars; m++) {
+	    valuesLL[k*var::nVars + m] = Jacobians.first[k][m] / leftVolume;
+	    valuesLR[k*var::nVars + m] = Jacobians.second[k][m] / leftVolume;
+
+	    valuesRL[k*var::nVars + m] = -1.*Jacobians.first[k][m] / rightVolume;
+	    valuesRR[k*var::nVars + m] = -1.*Jacobians.second[k][m] / rightVolume;
 	  }
 	}
+
+	MatSetValues(linSolver.A, var::nVars, rowL, var::nVars, colL, valuesLL, ADD_VALUES);
+	MatSetValues(linSolver.A, var::nVars, rowL, var::nVars, colR, valuesLR, ADD_VALUES);
+	MatSetValues(linSolver.A, var::nVars, rowR, var::nVars, colL, valuesRL, ADD_VALUES);
+	MatSetValues(linSolver.A, var::nVars, rowR, var::nVars, colR, valuesRR, ADD_VALUES);
       }
     }
   }
 
   // vypocet toku stenami ve smeru j
-  //#pragma omp parallel for
+#pragma omp parallel for
   for (int j=0; j<w.N(); j++) {
     for (int i=0; i<w.M()+1; i++) {
       const Face& f = g.faceJ(i, j);
@@ -115,44 +133,62 @@ void computeResidueConvImplicit(const CellField<var>& w, const Grid& g,
       if (i==0 || i==w.M()) {
 	var wb;
 	int offset;
+	double coeff, volume;
 	if (i==0) {
 	  wb = wr;
 	  offset = rightOffset;
+	  coeff = 1.;
+	  volume = rightVolume;
 	}
 	else {
 	  wb = wl;
 	  offset = leftOffset;
+	  coeff = -1.;
+	  volume = leftVolume;
 	}
 	auto it = BC.find(f.name);
 	Matrixd BJacobian = it->second.second(wb, f.s, setting);
 	Jacobians.second = Jacobians.second * BJacobian;
+
+	int row[var::nVars], col[var::nVars];
+	double values[var::nVars*var::nVars];
 	
 	for (int k=0; k<var::nVars; k++) {
-	  VecSetValue(linSolver.b, offset + k, -1.*flx[k] / leftVolume, ADD_VALUES);
+	  linSolver.rhs[offset + k] += coeff*flx[k] / volume;
+	  row[k] = offset + k;
+	  col[k] = offset + k;
 	  for (int m=0; m<var::nVars; m++) {
-	    MatSetValue(linSolver.A, offset + k, offset + m,
-			Jacobians.first[k][m] / leftVolume, ADD_VALUES);
-	    MatSetValue(linSolver.A, offset + k, offset + m,
-			Jacobians.second[k][m] / leftVolume, ADD_VALUES);
+	    values[k*var::nVars + m] = -coeff*Jacobians.first[k][m] / volume;
+	    values[k*var::nVars + m] += -coeff*Jacobians.second[k][m] / volume;
 	  }
 	}
+	MatSetValues(linSolver.A, var::nVars, row, var::nVars, col, values, ADD_VALUES);
       }
       else {
-	for (int k=0; k<var::nVars; k++) {
-	  VecSetValue(linSolver.b, leftOffset + k, -1.*flx[k] / leftVolume, ADD_VALUES);
-	  VecSetValue(linSolver.b, rightOffset + k, flx[k] / rightVolume, ADD_VALUES);
-	  for (int m=0; m<var::nVars; m++) {
-	    MatSetValue(linSolver.A, leftOffset + k, leftOffset + m,
-			Jacobians.first[k][m] / leftVolume, ADD_VALUES);
-	    MatSetValue(linSolver.A,leftOffset + k, rightOffset + m,
-			Jacobians.second[k][m] / leftVolume, ADD_VALUES);
+	int rowL[var::nVars], colL[var::nVars], rowR[var::nVars], colR[var::nVars];
+	double valuesLL[var::nVars*var::nVars], valuesLR[var::nVars*var::nVars];
+	double valuesRL[var::nVars*var::nVars], valuesRR[var::nVars*var::nVars];
 	
-	    MatSetValue(linSolver.A, rightOffset + k, leftOffset + m,
-			-1.*Jacobians.first[k][m] / rightVolume, ADD_VALUES);
-	    MatSetValue(linSolver.A, rightOffset + k, rightOffset + m,
-			-1.*Jacobians.second[k][m] / rightVolume, ADD_VALUES);
+	for (int k=0; k<var::nVars; k++) {
+	  linSolver.rhs[leftOffset + k] += -1.*flx[k] / leftVolume;
+	  linSolver.rhs[rightOffset + k] += flx[k] / rightVolume;
+	  rowL[k] = leftOffset + k;
+	  colL[k] = leftOffset + k;
+	  rowR[k] = rightOffset + k;
+	  colR[k] = rightOffset + k;
+	  for (int m=0; m<var::nVars; m++) {
+	    valuesLL[k*var::nVars + m] = Jacobians.first[k][m] / leftVolume;
+	    valuesLR[k*var::nVars + m] = Jacobians.second[k][m] / leftVolume;
+	    
+	    valuesRL[k*var::nVars + m] = -1.*Jacobians.first[k][m] / rightVolume;
+	    valuesRR[k*var::nVars + m] = -1.*Jacobians.second[k][m] / rightVolume;
 	  }
 	}
+
+	MatSetValues(linSolver.A, var::nVars, rowL, var::nVars, colL, valuesLL, ADD_VALUES);
+	MatSetValues(linSolver.A, var::nVars, rowL, var::nVars, colR, valuesLR, ADD_VALUES);
+	MatSetValues(linSolver.A, var::nVars, rowR, var::nVars, colL, valuesRL, ADD_VALUES);
+	MatSetValues(linSolver.A, var::nVars, rowR, var::nVars, colR, valuesRR, ADD_VALUES);
       }
     }
   }

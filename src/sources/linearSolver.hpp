@@ -25,6 +25,13 @@ public:
       break;
     case 2: {
       activated = true;
+
+      indices = new int[nmb];
+      rhs = new double[nmb];
+
+      for (int i=0; i<nmb; i++) {
+	indices[i] = i;
+      }
       
       VecCreate(PETSC_COMM_WORLD, &b);
       VecSetSizes(b, PETSC_DECIDE, nmb);
@@ -66,10 +73,15 @@ public:
       MatDestroy(&A);
       VecDestroy(&x);
       VecDestroy(&b);
+
+      delete [] rhs;
+      delete [] indices;
     }
   };
 
   int nmb;
+  int *indices;
+  double *rhs;
   
   Vec x, b;
   Mat A;
@@ -79,36 +91,37 @@ public:
   PetscReal rnorm;
   
   void solve() {
+    VecSetValues(b, nmb, indices, rhs, INSERT_VALUES);
     VecAssemblyBegin(b);
     VecAssemblyEnd(b);
 
     MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);
 
-    //MatView(A, PETSC_VIEWER_STDOUT_WORLD);
+    //VecView(b, PETSC_VIEWER_STDOUT_WORLD);
     
     KSPSetOperators(solver, A, A);
     KSPSolve(solver, b, x);
       
-    PetscInt  restart, maxits;
-    PetscReal rtol, abstol;
-    KSPGetTolerances(solver, &rtol, &abstol, NULL, &maxits);
-    KSPGMRESGetRestart(solver, &restart);
+    // PetscInt  restart, maxits;
+    // PetscReal rtol, abstol;
+    // KSPGetTolerances(solver, &rtol, &abstol, NULL, &maxits);
+    // KSPGMRESGetRestart(solver, &restart);
       
-    cout<<"Initial settings "<<endl;
-    cout<<"Relative tolerance : "<<rtol<<endl;
-    cout<<"Absolute tolerance : "<<abstol<<endl;
-    cout<<"Maximal number of iterations : "<<maxits<<endl;
-    cout<<"Number of Krylov vectors before restarting : "<<restart<<endl<<endl;
+    // cout<<"Initial settings "<<endl;
+    // cout<<"Relative tolerance : "<<rtol<<endl;
+    // cout<<"Absolute tolerance : "<<abstol<<endl;
+    // cout<<"Maximal number of iterations : "<<maxits<<endl;
+    // cout<<"Number of Krylov vectors before restarting : "<<restart<<endl<<endl;
       
-    cout<<"Convergence reason     KSP iterations      Residual norm    "<<endl;
+    // cout<<"Convergence reason     KSP iterations      Residual norm    "<<endl;
 
-    KSPGetConvergedReason(solver, &reason);
-    KSPGetIterationNumber(solver, &its);
-    KSPGetResidualNorm(solver, &rnorm);
+    // KSPGetConvergedReason(solver, &reason);
+    // KSPGetIterationNumber(solver, &its);
+    // KSPGetResidualNorm(solver, &rnorm);
     
         
-    cout << reason << " " << its << " " << rnorm << " " << endl;
+    // cout << reason << " " << its << " " << rnorm << " " << endl;
   };
 
   void getResults(CellField<var>& res) {
@@ -130,6 +143,7 @@ public:
   void reset() {
     MatZeroEntries(A);
     VecSet(b, 0.);
+    for (int i=0; i<nmb; i++) rhs[i] = 0;
   };
 
   void free() {
@@ -138,6 +152,9 @@ public:
       MatDestroy(&A);
       VecDestroy(&x);
       VecDestroy(&b);
+
+      delete [] rhs;
+      delete [] indices;
     }
     activated = false;
   };

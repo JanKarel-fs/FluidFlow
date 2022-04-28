@@ -46,18 +46,19 @@ int main(int argc,char **args) {
     } 
   }
   
-  CellField<Compressible> w(g), res(g);
+  CellField<Compressible> w(g), wOld(g), res(g);
 
   double dt;
   
   cout << "Start" << endl;
 
   initialisation(w, g, setting);
+  wOld = w;
 
   for (int i=1; i<=setting.stop; i++) {
     dt = timeStep(w, g, setting);
-
-    step<Compressible>(w, res, g, dt, BC, linSolver, setting);
+    
+    step<Compressible>(w, wOld, res, g, dt, BC, linSolver, setting);
 
     if (i%5 == 0) {
       cout << "iterace: " << i << ", dt = " << dt << endl;

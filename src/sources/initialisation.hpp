@@ -17,6 +17,7 @@
 #include "stepImplicit.hpp"
 #include "fvm/timeIncrement.hpp"
 #include "fvm/timeIncrementFirstOrder.hpp"
+#include "fvm/timeIncrementSecondOrder.hpp"
 
 void initialisation(CellField<Compressible>& w, const Grid& g, const Settings& setting);
 

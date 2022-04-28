@@ -10,11 +10,13 @@ Matrixd inletJacobian(const Compressible& wInside, const Vector2d& s, const Sett
   double ulx = wInside.rhoU.x / wInside.rho;
   double uly = wInside.rhoU.y / wInside.rho;
 
-  double Ma = sqrt(2. / (kappa - 1.) * (pow(p/p0, (1.-kappa)/kappa) - 1.));
-  double rho = rho0 * pow(p/p0, 1./kappa);
-  double a = sqrt(kappa * p / rho);
-
   double V = pow(p/p0, (1.-kappa)/kappa);
+
+  double epsilon = 1.e-6;
+  if(V<=1. + epsilon) V=1. + epsilon;
+
+  double Ma = sqrt(2. / (kappa - 1.) * (V - 1.));
+  double a = sqrt(kappa * p0 / rho0 * 1./V);
   
   double Dp[4];
   Dp[0] = (kappa-1.) * (pow(ulx, 2) + pow(uly, 2)) / 2.;
@@ -32,7 +34,7 @@ Matrixd inletJacobian(const Compressible& wInside, const Vector2d& s, const Sett
   J[0][2] = coeff * Dp[2];
   J[0][3] = coeff * Dp[3];
 
-  coeff = 1./a * (Ma - V/Ma + Ma*(kappa-1.)/2);
+  coeff = 1./a * (Ma - V/Ma + Ma*(kappa-1.)/2.);
   // 2. radek matice
   J[1][0] = coeff *Dp[0] * cos(alpha);
   J[1][1] = coeff *Dp[1] * cos(alpha);

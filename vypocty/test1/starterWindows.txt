@@ -5,10 +5,10 @@ nCells			50
 ghostCells		1
 //////////////////////////////////////////////////////////////////////////////
 INITIAL_CONDITIONS
-rhoInit			1			// initial density
+rhoInit			0.9			// initial density
 uInit			0.5			// initial x velocity component
 vInit			0			// initial y velocity component
-pInit			1			// initial pressure
+pInit			0.8			// initial pressure
 //////////////////////////////////////////////////////////////////////////////
 BOUNDARY_CONDITIONS
 numOfBoundaries		3			// pocet typu hranic
@@ -26,18 +26,20 @@ alpha			0			// inlet flow angel
 Ma2is			0.675			// isoentropic Mach number
 //////////////////////////////////////////////////////////////////////////////
 ACCURACY
-temporalOrder		1			//(1) 1st order, (2) 2nd order
+temporalOrder		2			//(1) 1st order, (2) 2nd order
 spatialOrder		2			//(1) 1st order, (2) 2nd order
 limiter			1			//(1) Barth-Jespersen, (2) Venkatakrishnan
 //////////////////////////////////////////////////////////////////////////////
 FLUX_SPLITTER
-flux			1			// (1) Upwind, (2) Rusanov
+flux			2			// (1) Upwind, (2) Rusanov
 //////////////////////////////////////////////////////////////////////////////
 TIME
-CFL			100
+CFL			0.8
+CFLbegin		0.8
+incrementIts		1
 //////////////////////////////////////////////////////////////////////////////
 SYSTEM
-solver			2			// (1) explicit, (2) implicit
+solver			1			// (1) explicit, (2) implicit
 convection		1			// (0) off, (1) on
 diffusion		0			// (0) off, (1) on
 nodeWeightType		LSM			// LSM, Weight
@@ -50,4 +52,4 @@ R			287.1
 Pr			0.72
 //////////////////////////////////////////////////////////////////////////////
 SAVING
-stop			1			// total number of interations
+stop			10000			// total number of interations

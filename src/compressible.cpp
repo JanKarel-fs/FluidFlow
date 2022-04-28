@@ -62,6 +62,92 @@ Compressible Compressible::fluxDissipative(const Compressible& w, const Primitiv
 }
 
 
+pair<pair<Matrixd, Matrixd>, Compressible> Compressible::fluxDissipativeImplicit(
+					 const Compressible& wl, const Compressible& wr,
+					 const Point2d& cL, const Point2d& cR,
+					 const PrimitiveVars& pVars,
+					 const Vector2<PrimitiveVars>& grad_pVars, const Vector2d& s) {
+  Compressible w = 0.5 * (wl + wr);
+
+  Compressible flx = fluxDissipative(w, pVars, grad_pVars, s);
+
+  const double mu = w.mu();
+  const double k = cp * mu / Pr;
+
+  double ds = s.length();
+  Vector2d n = s / ds;
+
+  Vector2d LR(cL, cR);
+  Vector2d s_LR(LR.y, -LR.x);
+
+  double diamondVol = 0.5 * std::fabs(cross(s, s_LR));
+
+  Matrixd dFdPleft(nVars), dFdPright(nVars);
+  Matrixd dPdWleft(nVars), dPdWright(nVars);
+
+  dFdPleft.zero();  dFdPright.zero();
+  dPdWleft.zero();  dPdWright.zero();
+
+
+  // evaluation of dF/dP
+  // second row
+  double value = -mu * ds/(2.*diamondVol) * (1. + 1./3. * n.x*n.x);
+  dFdPleft[1][1] = value;   dFdPright[1][1] = -value;
+  value = -mu * ds/(6.*diamondVol) * n.x*n.y;
+  dFdPleft[1][2] = value;   dFdPright[1][2] = -value;
+
+  // third row
+  dFdPleft[2][1] = value;   dFdPright[2][1] = -value;
+  value = -mu * ds/(2.*diamondVol) * (1. + 1./3. * n.y*n.y);
+  dFdPleft[2][2] = value;   dFdPright[2][2] = -value;
+
+  const Vector2d& velocity = pVars.u;
+  // fourth row
+  double I = 0.5 * flx.rhoU.x / ds;
+  double II = mu * ds/(2.*diamondVol) * (-velocity.x * (1. + n.x*n.x/3.) - velocity.y * n.x*n.y/3.);
+  dFdPleft[3][1] = I + II;   dFdPright[3][1] = I - II;
+  I = 0.5 * flx.rhoU.y / ds;
+  II = mu * ds/(2.*diamondVol) * (-velocity.x * n.x*n.y/3. - velocity.y * (1. + n.y*n.y/3.));
+  dFdPleft[3][2] = I + II;   dFdPright[3][2] = I - II;
+  value = -k * ds/(2.*diamondVol);
+  dFdPleft[3][3] = value;   dFdPright[3][3] = -value;
+
+  // evaluation of dP/dW
+  double coeff = (kappa - 1.) / R;
+  dPdWleft[0][0] = 1.;
+  dPdWleft[1][0] = -wl.rhoU.x/(pow(wl.rho, 2));  dPdWleft[1][1] = 1./wl.rho;
+  dPdWleft[2][0] = -wl.rhoU.y/(pow(wl.rho, 2));  dPdWleft[2][2] = 1./wl.rho;
+  dPdWleft[3][0] = coeff * (-wl.e/pow(wl.rho, 2)
+			    + (pow(wl.rhoU.x, 2) + pow(wl.rhoU.y, 2)) / pow(wl.rho, 3));
+  dPdWleft[3][1] = -coeff * wl.rhoU.x / pow(wl.rho, 2);
+  dPdWleft[3][2] = -coeff * wl.rhoU.y / pow(wl.rho, 2);
+  dPdWleft[3][3] = coeff / wl.rho;
+
+  
+  dPdWright[0][0] = 1.;
+  dPdWright[1][0] = -wr.rhoU.x/(pow(wr.rho, 2));  dPdWright[1][1] = 1./wr.rho;
+  dPdWright[2][0] = -wr.rhoU.y/(pow(wr.rho, 2));  dPdWright[2][2] = 1./wr.rho;
+  dPdWright[3][0] = coeff * (-wr.e/pow(wr.rho, 2)
+			    + (pow(wr.rhoU.x, 2) + pow(wr.rhoU.y, 2)) / pow(wr.rho, 3));
+  dPdWright[3][1] = -coeff * wr.rhoU.x / pow(wr.rho, 2);
+  dPdWright[3][2] = -coeff * wr.rhoU.y / pow(wr.rho, 2);
+  dPdWright[3][3] = coeff / wr.rho;
+  
+  Matrixd JL(nVars), JR(nVars);
+
+  JL = dFdPleft * dPdWleft;
+  JR = dFdPright * dPdWright;
+
+  pair<pair<Matrixd, Matrixd>, Compressible> JacobiansAndRHS;
+
+  JacobiansAndRHS.first.first = JL * ds;
+  JacobiansAndRHS.first.second = JR * ds;
+  JacobiansAndRHS.second = flx;
+
+  return JacobiansAndRHS;
+}
+
+
 Compressible Compressible::Upwind(const Compressible& wl, const Compressible& wr, const Vector2d& s) {
   // s - normalovy vektor prenasobeny delkou steny
   // numericky tok -> Upwind
@@ -273,8 +359,113 @@ pair<pair<Matrixd, Matrixd>, Compressible> Compressible::UpwindImplicit(const Co
 pair<pair<Matrixd, Matrixd>, Compressible> Compressible::RusanovImplicit(const Compressible& wl,
 							 const Compressible& wr, const Vector2d& s) {
 
-  cout << "An implicit version of a Rusanov scheme is not implemented yet!" << endl;
-  exit(22);
+
+  Compressible flx = Rusanov(wl, wr, s);
+
+  Matrixd JL(nVars), JR(nVars);
+  JL.zero();  JR.zero();
+
+  double ds = s.length();
+  Vector2d n = s / ds;
+  Vector2d t(-n.y, n.x);
+
+  Compressible WR = wr;
+  Compressible WL = wl;
+
+  double rhouR = dot(wr.rhoU, n);
+  double rhovR = dot(wr.rhoU, t);
+  WR.rhoU = Vector2d(rhouR, rhovR);
+
+  double rhouL = dot(wl.rhoU, n);
+  double rhovL = dot(wl.rhoU, t);
+  WL.rhoU = Vector2d(rhouL, rhovL);
+
+  double lambdaL = std::fabs(WL.rhoU.x/WL.rho) + WL.a();
+  double lambdaR = std::fabs(WR.rhoU.x/WR.rho) + WR.a();
+
+  double Slambda = std::max(lambdaL, lambdaR);
+
+  double rhoL = WL.rho;
+  double uL = WL.rhoU.x / WL.rho;
+  double vL = WL.rhoU.y / WL.rho;
+  double eL = WL.e;
+  double pL = WL.p();
+
+  double rhoR = WR.rho;
+  double uR = WR.rhoU.x / WR.rho;
+  double vR = WR.rhoU.y / WR.rho;
+  double eR = WR.e;
+  double pR = WR.p();
+
+
+  // LEFT JACOBIAN
+  // 1st row of the left Jacobian
+  JL[0][1] = 1.;
+
+  // 2nd row of the left Jacobian
+  JL[1][0] = -uL*uL + (kappa-1.)/2. * (uL*uL + vL*vL);
+  JL[1][1] = 2.*uL - (kappa-1.) * uL;
+  JL[1][2] = -(kappa-1.) * vL;
+  JL[1][3] = (kappa-1.);
+
+  // 3rd row of the left Jacobian
+  JL[2][0] = -uL*vL;
+  JL[2][1] = vL;
+  JL[2][2] = uL;
+
+  // 4ht row of the left Jacobian
+  JL[3][0] = (kappa-1.)/2. * (uL*uL + vL*vL)*uL - (eL + pL)/(rhoL) * uL;
+  JL[3][1] = -(kappa-1.) * uL*uL + (eL + pL)/(rhoL);
+  JL[3][2] = -(kappa-1.) * vL*uL;
+  JL[3][3] = kappa * uL;
+
+  // RIGHT JACOBIAN
+  // 1st row of the right Jacobian
+  JR[0][1] = 1.;
+
+  // 2nd row of the right Jacobian
+  JR[1][0] = -uR*uR + (kappa-1.)/2. * (uR*uR + vR*vR);
+  JR[1][1] = 2.*uR - (kappa-1.) * uR;
+  JR[1][2] = -(kappa-1.) * vR;
+  JR[1][3] = (kappa-1.);
+
+  // 3rd row of the right Jacobian
+  JR[2][0] = -uR*vR;
+  JR[2][1] = vR;
+  JR[2][2] = uR;
+
+  // 4th row of the right Jacobian
+  JR[3][0] = (kappa-1.)/2. * (uR*uR + vR*vR)*uR - (eR + pR)/(rhoR) * uR;
+  JR[3][1] = -(kappa-1.) * uR*uR + (eR + pR)/(rhoR);
+  JR[3][2] = -(kappa-1.) * vR*uR;
+  JR[3][3] = kappa * uR;
+
+  Matrixd I(nVars);
+  I.ones();
+
+  JL = 0.5 * JL + Slambda/2. * I;
+  JR = 0.5 * JR - Slambda/2. * I;
+
+  Vector2d nInv(n.x, -n.y);
+  Vector2d tInv(-t.x, t.y);
+
+  Matrixd T(nVars), Tinv(nVars);
+  T.ones();
+  Tinv.ones();
+
+  T[1][1] = n.x;  T[1][2] = n.y;
+  T[2][1] = t.x;  T[2][2] = t.y;
+
+  Tinv[1][1] = nInv.x;  Tinv[1][2] = nInv.y;
+  Tinv[2][1] = tInv.x;  Tinv[2][2] = tInv.y;
+
+  pair<pair<Matrixd, Matrixd>, Compressible> JacobiansAndRHS;
+
+  JacobiansAndRHS.first.first = Tinv *JL * T * ds;
+  JacobiansAndRHS.first.second = Tinv * JR * T * ds;
+  JacobiansAndRHS.second = flx;
+
+  return JacobiansAndRHS;
 }
 
 

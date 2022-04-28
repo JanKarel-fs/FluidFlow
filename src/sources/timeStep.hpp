@@ -12,6 +12,6 @@
 #include "../compressible.hpp"
 #include "settings.hpp"
 
-double timeStep(const CellField<Compressible>& w, const Grid& g, const Settings& setting);
+double timeStep(const CellField<Compressible>& w, const Grid& g, Settings& setting);
 
 #endif

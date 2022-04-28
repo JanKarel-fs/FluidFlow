@@ -35,6 +35,9 @@ public:
   double Pr;
   int stop;
   double CFL;
+  double CFLmax;
+  int incrementIts;
+  double incCoeff;
   int solver;
   int temporalOrder;
   int spatialOrder;
@@ -44,6 +47,8 @@ public:
   string nodeWeightType;
   int convection;
   int diffusion;
+
+  void updateCFL();
 
   Settings() {};
   Settings(const string& name);

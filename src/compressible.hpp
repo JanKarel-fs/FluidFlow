@@ -45,6 +45,10 @@ public:
 						      const Compressible& wr, const Vector2d& s);
   static pair<pair<Matrixd, Matrixd>, Compressible> RusanovImplicit(const Compressible& wl,
 						      const Compressible& wr, const Vector2d& s);
+  static pair<pair<Matrixd, Matrixd>, Compressible> fluxDissipativeImplicit(const Compressible& wl,
+					 const Compressible& wr, const Point2d& L, const Point2d& R,
+					 const PrimitiveVars& pVars,
+					 const Vector2<PrimitiveVars>& grad_pVars, const Vector2d& s);
   static Compressible fabs(const Compressible& w);
   static Compressible sqrt(const Compressible& w);
   static Compressible max(const Compressible& a, const Compressible& b);

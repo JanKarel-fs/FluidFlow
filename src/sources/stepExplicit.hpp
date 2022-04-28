@@ -10,9 +10,9 @@
 #include "sources/linearSolver.hpp"
 
 template <typename var>
-void stepExplicit(CellField<var>& w, CellField<var>& res, const Grid& g, const double& dt,
-		  const map<string, bcWithJacobian>& BC, LinearSolver<var>& linSolver,
-		  const Settings& setting) {
+void stepExplicit(CellField<var>& w, CellField<var>& wOld, CellField<var>& res, const Grid& g,
+		  const double& dt, const map<string, bcWithJacobian>& BC,
+		  LinearSolver<var>& linSolver, const Settings& setting) {
 
   CellField<var> wStar(g);
 

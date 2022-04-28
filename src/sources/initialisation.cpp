@@ -41,8 +41,8 @@ void initialisation(CellField<Compressible>& w, const Grid& g, const Settings& s
     switch (setting.temporalOrder) {
     case 1: timeIncrement<Compressible> = timeIncrementFirstOrder<Compressible>;
       break;
-    case 2: cout << "The second order of accuracy in time isn't implemented for an implicit method yet!" << endl;;
-      exit(1);
+    case 2:  timeIncrement<Compressible> = timeIncrementSecondOrder<Compressible>;
+      break;
     default:
       cout << "No such temporal order!" << endl;
       exit(0);

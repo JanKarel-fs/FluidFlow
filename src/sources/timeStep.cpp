@@ -1,6 +1,6 @@
 #include "timeStep.hpp"
 
-double timeStep(const CellField<Compressible>& w, const Grid& g, const Settings& setting) {
+double timeStep(const CellField<Compressible>& w, const Grid& g, Settings& setting) {
   double dt = std::numeric_limits<double>::max();
 
 #pragma omp parallel default(shared) reduction(min:dt)
@@ -61,5 +61,8 @@ double timeStep(const CellField<Compressible>& w, const Grid& g, const Settings&
       }
     }
   }
+
+  setting.updateCFL();
+  
   return dt;
 }
